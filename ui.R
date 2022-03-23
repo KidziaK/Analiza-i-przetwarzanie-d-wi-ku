@@ -1,29 +1,38 @@
-ui <- fluidPage(
+ui <- dashboardPage(
+  skin = "yellow",
   
-  # App title ----
-  titlePanel("Hello Shiny!"),
-  
-  # Sidebar layout with input and output definitions ----
-  sidebarLayout(
-    
-    # Sidebar panel for inputs ----
-    sidebarPanel(
-      
-      # Input: Slider for the number of bins ----
-      sliderInput(inputId = "bins",
-                  label = "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30)
-      
+  dashboardHeader(
+    title = "Sound Analysis"
     ),
-    
-    # Main panel for displaying outputs ----
-    mainPanel(
-      
-      # Output: Histogram ----
-      plotOutput(outputId = "distPlot")
+
+  dashboardSidebar(
+
+    sidebarMenu(
+      id = 'sidebar',
+      style = "position: relative; overflow: visible;",
+      menuItem( "Upload Data",
+                tabName = "upload",
+                badgeColor = "green",
+                icon = icon("upload")
+                ),
+      menuItem( "No Upload Data",
+                tabName = "test",
+                badgeColor = "green",
+                icon = icon("upload")
+      )
       
     )
+    
+  ),
+  dashboardBody(
+    conditionalPanel(
+      'input.sidebar == "upload"',
+      "Upload Data"
+    ),
+    conditionalPanel(
+      'input.sidebar == "test"',
+      "test"
+    )
+    
   )
 )
