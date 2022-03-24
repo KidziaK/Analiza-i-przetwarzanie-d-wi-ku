@@ -5,6 +5,8 @@ server <- function(input, output, session) {
   output$files <- renderTable(input$upload)
   wav_files <- NULL
   selected_wav <- NULL
+  selected_frame <- 1
+
   
   # UI for upload tab
   output$upload_ui <- renderUI({
@@ -51,8 +53,12 @@ server <- function(input, output, session) {
           uiOutput("parameters_choose_ui")
         ),
         column(
-          width = 9,
+          width = 6,
           uiOutput("parameters_plot_ui")
+        ),
+        column(
+          width = 3,
+          uiOutput("current_frame_plot_ui")
         )
       )
     )
@@ -60,54 +66,81 @@ server <- function(input, output, session) {
   
   # UI for Volume box
   output$volume <- renderValueBox({
-    req(input$select_file)
+    req(input$current_frame_number)
     
-    valueBox(calculate_volume(selected_wav@left - mean(selected_wav@left)), 
+    valueBox(calculate_volume(selected_frame - mean(selected_frame)), 
              "Volume", 
              icon = icon("volume-up"), 
              color = "green")
   })
   
-  # UI for STE box
+  # Slider for STE box
   output$STE <- renderValueBox({
-    req(input$select_file)
+    req(input$current_frame_number)
     
-    valueBox(calculate_STE(selected_wav@left - mean(selected_wav@left)), 
+    valueBox(calculate_STE(selected_frame - mean(selected_frame)), 
              "Short time energy", 
-             icon = icon("volume-up"), 
+             icon = icon("bolt"), 
              color = "green")
   })
   
-  # UI for ZCR box
+  # Slider for ZCR box
   output$ZCR <- renderValueBox({
-    req(input$select_file)
+    req(input$current_frame_number)
     
-    valueBox(calculate_ZCR(selected_wav@left - mean(selected_wav@left), selected_wav@samp.rate), 
+    valueBox(calculate_ZCR(selected_frame - mean(selected_frame), ifelse(is.null(selected_wav), 1, selected_wav@samp.rate)), 
              "Zero crossing rate", 
-             icon = icon("volume-up"), 
+             icon = icon("times"), 
              color = "green")
   })
   
-  # UI for paramters chooser
+  # Slider for paramters chooser
   output$parameters_choose_ui <- renderUI({
     box(
       title = span(icon("list-alt"), "Choose"),
       status = "primary",
       solidHeader = TRUE,
       width = 12,
-      uiOutput("audio_file_selecter")
+      uiOutput("audio_file_selecter"),
+      sliderInput("frames", "Number of frames:",
+                  min = 1, max = 1000, value = 500
+      ),
+      sliderInput("overlap", "Size of overlap:",
+                  min = 0, max = 100, value = 0
+      ),
+      uiOutput("current_frame_number")
+    )
+  })
+  
+  # UI for current frame slider
+  output$current_frame_number <- renderUI({
+    req(input$frames)
+    
+    sliderInput("current_frame_number", "Current frame:",
+                min = 1, max = input$frames, value = 1
     )
   })
   
   # UI for plot box
   output$parameters_plot_ui <-  renderUI({
     box(
-      title = span(icon("chart-line"), "Plots"),
+      title = span(icon("chart-line"), "Signal Plot"),
       status = "primary",
       solidHeader = TRUE,
       width = 12,
      
       plotOutput("plot")
+    )
+  })
+  
+  output$current_frame_plot_ui <-  renderUI({
+    box(
+      title = span(icon("chart-line"), "Current Frame"),
+      status = "primary",
+      solidHeader = TRUE,
+      width = 12,
+      
+      plotOutput("frame_plot")
     )
   })
   
@@ -117,7 +150,34 @@ server <- function(input, output, session) {
     
     snd <- selected_wav@left - mean(selected_wav@left)
     
-    plot(snd, type = 'l', xlab = 'Samples', ylab = 'Amplitude')
+    n <- length(snd)
+    
+    p <- ggplot(data.frame(Time = 1:n,  Amplitude = snd),
+                aes(x = Time, y = Amplitude)) +
+      geom_line() 
+
+    
+    p
+  })
+  
+  # UI for current frame plot
+  output$frame_plot <-  renderPlot({
+    req(input$select_file)
+    req(input$current_frame_number)
+    
+    frame_size <- length(selected_wav@left)/input$frames
+    
+    selected_frame <<- selected_wav@left[
+      (1 + (input$current_frame_number - 1)*(frame_size)):(1 + input$current_frame_number*frame_size)] 
+
+    snd <- selected_frame - mean(selected_frame)
+    
+    p <- ggplot(data.frame(Time = (1 + (input$current_frame_number - 1)*(frame_size)):(1 + input$current_frame_number*frame_size),  
+                           Amplitude = snd),
+                aes(x = Time, y = Amplitude)) +
+      geom_line() 
+    
+    p
   })
   
   # Data upload event handler
@@ -139,7 +199,22 @@ server <- function(input, output, session) {
     req(wav_files)
 
     selected_wav <<- wav_files[which(input$upload$name == input$select_file)][[1]]
+    
   })
+  
+
+  
+  observeEvent(input$current_frame_number, {
+    req(selected_wav)
+    req(input$frames)
+
+    frame_size <- round(length(selected_wav@left)/input$frames)
+    
+    selected_frame <<- selected_wav@left[
+      (1 + (input$current_frame_number - 1)*(frame_size)):(1 + input$current_frame_number*frame_size)] 
+  })
+  
+  
   
   
 }
