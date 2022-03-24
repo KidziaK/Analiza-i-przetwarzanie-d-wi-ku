@@ -1,3 +1,5 @@
+
+
 ui <- dashboardPage(
   skin = "yellow",
   
@@ -31,7 +33,7 @@ ui <- dashboardPage(
     ),
     conditionalPanel(
       'input.sidebar == "test"',
-      "test"
+      uiOutput("parameters_ui")
     )
     
   )
