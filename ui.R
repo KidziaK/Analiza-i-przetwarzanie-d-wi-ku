@@ -15,10 +15,10 @@ ui <- dashboardPage(
                 badgeColor = "green",
                 icon = icon("upload")
                 ),
-      menuItem( "No Upload Data",
+      menuItem( "Parameters",
                 tabName = "test",
                 badgeColor = "green",
-                icon = icon("upload")
+                icon = icon("chart-line")
       )
       
     )
@@ -27,7 +27,7 @@ ui <- dashboardPage(
   dashboardBody(
     conditionalPanel(
       'input.sidebar == "upload"',
-      "Upload Data"
+      uiOutput("upload_ui")
     ),
     conditionalPanel(
       'input.sidebar == "test"',
