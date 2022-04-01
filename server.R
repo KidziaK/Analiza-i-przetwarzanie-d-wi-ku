@@ -48,6 +48,13 @@ server <- function(input, output, session) {
     
       ),
       fluidRow(
+        
+        valueBoxOutput("VSTD"),
+        valueBoxOutput("VDR"),
+        valueBoxOutput("SR")
+        
+      ),
+      fluidRow(
         column(
           width = 3,
           uiOutput("parameters_choose_ui")
@@ -92,6 +99,43 @@ server <- function(input, output, session) {
              "Zero crossing rate", 
              icon = icon("times"), 
              color = "green")
+  })
+  
+  # UI for VSTD box
+  output$VSTD <- renderValueBox({
+    req(input$current_frame_number)
+    req(input$frames)
+    req(selected_wav)
+    
+    
+    valueBox(calculate_VSTD(selected_wav@left - mean(selected_wav@left), input$frames),
+             "VSTD", 
+             icon = icon("volume-up"), 
+             color = "green")
+  })
+  
+  # UI for VDR box
+  output$VDR <- renderValueBox({
+    req(input$current_frame_number)
+    req(input$frames)
+    req(selected_wav)
+    
+    valueBox(calculate_VDR(selected_wav@left - mean(selected_wav@left), input$frames),
+             "VDR", 
+             icon = icon("volume-up"), 
+             color = "green")
+  })
+  
+  # UI for SR box
+  output$SR <- renderValueBox({
+    req(input$current_frame_number)
+    
+    SR <- calculate_SR(selected_frame - mean(selected_frame),ifelse(is.null(selected_wav), 1, selected_wav@samp.rate), 50, 0.02)
+    
+    valueBox(1*SR, 
+             "SR", 
+             icon = icon("volume-off"), 
+             color = ifelse(SR == TRUE, "green", "red"))
   })
   
   # Slider for paramters chooser
