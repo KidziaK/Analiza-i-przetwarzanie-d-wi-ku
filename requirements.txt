@@ -1,0 +1,7 @@
+shiny,
+dplyr,
+DT,
+ggplot2,
+shinydashboard,
+plotly,
+tuneR

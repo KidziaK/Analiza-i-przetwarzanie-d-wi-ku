@@ -5,7 +5,6 @@ library(ggplot2)
 library(shinydashboard)
 library(plotly)
 library(tuneR)
-library(pryr)
 
 rm(list = ls())
 
