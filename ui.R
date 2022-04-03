@@ -33,7 +33,8 @@ ui <- dashboardPage(
     ),
     conditionalPanel(
       'input.sidebar == "test"',
-      uiOutput("parameters_ui")
+      uiOutput("parameters_ui"),
+      
     )
     
   )
